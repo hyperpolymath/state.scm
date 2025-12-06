@@ -2,74 +2,20 @@
 
 ## Supported Versions
 
+Use this section to tell people about which versions of your project are
+currently being supported with security updates.
+
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.x     | :white_check_mark: |
-| 1.x     | :x:                |
+| 5.1.x   | :white_check_mark: |
+| 5.0.x   | :x:                |
+| 4.0.x   | :white_check_mark: |
+| < 4.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in STATE, please report it responsibly.
+Use this section to tell people how to report a vulnerability.
 
-### How to Report
-
-1. **Do NOT** open a public issue for security vulnerabilities
-2. Email: security@example.com (replace with actual contact)
-3. Or use GitLab's confidential issue feature if available
-
-### What to Include
-
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact assessment
-- Any suggested fixes (optional)
-
-### Response Timeline
-
-- **Acknowledgment**: Within 48 hours
-- **Initial Assessment**: Within 7 days
-- **Resolution Target**: Within 30 days for critical issues
-
-### Scope
-
-This security policy covers:
-
-- The STATE Guile Scheme library (`lib/`)
-- STATE.scm template files
-- Example configurations
-
-### Out of Scope
-
-- User-generated STATE.scm files
-- Third-party minikanren implementations
-- Issues in Guile Scheme itself
-
-## Security Considerations
-
-### STATE.scm Files
-
-STATE.scm files may contain:
-- Personal information (name, roles)
-- Project names and descriptions
-- File paths from your system
-
-**Recommendations:**
-- Do not commit STATE.scm files with sensitive data to public repositories
-- Review files before sharing
-- Use `.gitignore` to exclude personal state files
-
-### Code Execution
-
-STATE.scm files are Scheme code and will be evaluated when loaded.
-
-**Mitigations:**
-- Only load STATE.scm files from trusted sources
-- Review files before loading in Guile REPL
-- The library modules do not execute arbitrary code from state files
-
-## Security Design Principles
-
-1. **Minimal Dependencies**: Core functionality has no external dependencies
-2. **No Network Access**: STATE does not make network requests
-3. **No File System Writes**: Library only reads state, never writes automatically
-4. **Sandboxed Evaluation**: State data is treated as data, not executable code
+Tell them where to go, how often they can expect to get an update on a
+reported vulnerability, what to expect if the vulnerability is accepted or
+declined, etc.
