@@ -25,16 +25,33 @@ context, decisions, and next actions across multiple Claude conversations.
 * Claude reads it and resumes exactly where you left off
 * Includes: current project focus, blockers, next actions, completion percentages
 
-== Technology Stack
-
-*Language:* Guile Scheme (GNU's Scheme implementation)
-
-* Minimal, readable, homoiconic (code = data)
-* minikanren-like patterns for constraint/logic queries over project state
-
-*Format:* `STATE.scm` file
-
 == Quick Start
+
+=== Development Environment
+
+*Primary (Guix):*
+
+[source,bash]
+----
+guix shell -m manifest.scm
+just test
+----
+
+*Fallback (Nix):*
+
+[source,bash]
+----
+nix develop
+just test
+----
+
+*Container (Wolfi + Guix):*
+
+[source,bash]
+----
+nerdctl build -t state:latest .
+nerdctl run -it --rm state:latest
+----
 
 === End of Conversation
 
@@ -57,6 +74,17 @@ Claude:
   3. Identifies current focus
   4. Picks up exactly where last conversation left off
 ----
+
+== Technology Stack
+
+*Language:* Guile Scheme (GNU's Scheme implementation)
+
+* Minimal, readable, homoiconic (code = data)
+* minikanren-like patterns for constraint/logic queries over project state
+
+*Package Management:* Guix (primary), Nix (fallback)
+
+*Containers:* Wolfi base image with Guix
 
 == File Structure
 
@@ -88,6 +116,10 @@ Complete list of all projects with:
 * Dependencies and blockers
 * Next actions
 
+[[history]]
+=== History
+Completion snapshots over time for velocity tracking and estimation.
+
 [[critical-next]]
 === Critical Next Actions
 Prioritized list of immediate actions with optional deadlines.
@@ -98,17 +130,25 @@ STATE supports minikanren-style relational queries:
 
 [source,scheme]
 ----
+;; Load the library
+(add-to-load-path "lib")
+(use-modules (state))
+
 ;; What's my current focus?
-(query-focus state)
+(get-current-focus state)
 ;; -> "Oblibeny parser implementation"
 
 ;; What projects are blocked?
-(query-blocked-projects state)
-;; -> (("My Language Solo" . "blocks on Oblibeny parser"))
+(get-blocked-projects state)
+;; -> (project-alist ...)
 
-;; What's due this week?
-(query-by-deadline state (current-week))
-;; -> (("NeuroPhone" . "2025-12-13"))
+;; minikanren relational query
+(run* (q) (statuso q "blocked" state))
+;; -> ("My Language Solo" "ZeroStep" "Aletheia")
+
+;; Generate dependency graph
+(generate-dot state)      ; GraphViz DOT
+(generate-mermaid state)  ; Mermaid diagram
 ----
 
 == Why Scheme?
@@ -132,27 +172,54 @@ Comparison:
 
 == Files in This Repository
 
+=== Core
+
+* `STATE.scm` - Template state file
+* `lib/` - Modular Scheme library
+** `state-core.scm` - Core accessors and predicates
+** `state-kanren.scm` - minikanren integration
+** `state-graph.scm` - GraphViz/Mermaid visualization
+** `state-history.scm` - Velocity tracking and estimation
+** `state.scm` - Main entry point
+* `examples/` - Example state files
+
+=== Documentation
+
 * `README.adoc` - This documentation
-* `STATE.scm` - The template/example state file
-* `state-queries.scm` - minikanren-style query functions
 * `USAGE.adoc` - Comprehensive usage guide
-* `examples/` - Example state files and usage patterns
+* `CHANGELOG.adoc` - Version history
+* `CONTRIBUTING.adoc` - Contribution guidelines
+* `GOVERNANCE.adoc` - Project governance
+* `CODE_OF_CONDUCT.adoc` - Community standards
+
+=== Infrastructure
+
+* `channels.scm` - Guix channel definition
+* `manifest.scm` - Guix package manifest
+* `guix.scm` - Guix package definition
+* `flake.nix` - Nix flake (fallback)
+* `Containerfile` - Wolfi + Guix container
+* `justfile` - Task automation
+* `.gitlab-ci.yml` - CI/CD pipeline
 
 == Roadmap
 
-=== Phase 1: Current Implementation ✓
+=== Phase 1: Foundation ✓
 
 * [x] Basic STATE.scm structure
 * [x] Project metadata encoding
 * [x] Session checkpoint
 * [x] Manual download/upload cycle
 
-=== Phase 2: Smart Queries
+=== Phase 2: Smart Queries ✓
 
-* [ ] Implement minikanren predicates for blocking relationships
-* [ ] Auto-generate dependency graphs
-* [ ] Calculate "critical path" (longest chain of dependencies)
-* [ ] Estimate time-to-completion
+* [x] Modular architecture
+* [x] minikanren integration (with fallback)
+* [x] GraphViz DOT visualization
+* [x] Mermaid diagram generation
+* [x] History tracking
+* [x] Velocity calculation
+* [x] Time estimation
 
 === Phase 3: Automation
 
@@ -169,7 +236,7 @@ Comparison:
 
 == License
 
-This project is Free Software. See LICENSE for details.
+Dual licensed under MIT and Palimpsest v0.8. See LICENSE.txt for details.
 
 == Author
 

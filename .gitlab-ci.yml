@@ -10,7 +10,7 @@ stages:
 variables:
   GUILE_LOAD_PATH: "$CI_PROJECT_DIR/lib"
 
-# Use Guile container image
+# Use minimal Debian for CI (Guix in container is complex for CI)
 image: docker.io/library/debian:bookworm-slim
 
 before_script:
@@ -27,6 +27,14 @@ lint:
         guile -c "(load \"$f\")" || exit 1
       done
     - echo "All files OK"
+
+# Also lint Guix files
+lint-guix:
+  stage: lint
+  script:
+    - guile -c '(load "channels.scm")' || echo "channels.scm requires Guix"
+    - guile -c '(load "manifest.scm")' || echo "manifest.scm requires Guix"
+    - guile -c '(load "guix.scm")' || echo "guix.scm requires Guix"
 
 # Test stage - run tests
 test:
@@ -71,6 +79,10 @@ pages:
     - asciidoctor CONTRIBUTING.adoc -o public/contributing.html
     - asciidoctor GOVERNANCE.adoc -o public/governance.html
     - asciidoctor CODE_OF_CONDUCT.adoc -o public/code-of-conduct.html
+    - asciidoctor SECURITY.adoc -o public/security.html
+    - asciidoctor CHANGELOG.adoc -o public/changelog.html
+    - asciidoctor PROJECT-STATUS.adoc -o public/status.html
+    - asciidoctor MAINTAINERS.adoc -o public/maintainers.html
   artifacts:
     paths:
       - public

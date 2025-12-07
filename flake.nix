@@ -1,7 +1,19 @@
 # SPDX-License-Identifier: MIT AND LicenseRef-Palimpsest-0.8
-# Nix flake for STATE - reproducible development environment
+#
+# Nix flake for STATE - FALLBACK option
+#
+# ============================================================
+# NOTE: Guix is the PRIMARY package manager for this project.
+# Use Nix only if Guix is unavailable on your system.
+#
+# Primary (Guix):
+#   guix shell -m manifest.scm
+#
+# Fallback (Nix):
+#   nix develop
+# ============================================================
 {
-  description = "STATE - Stateful Context Tracking Engine for AI Conversation Continuity";
+  description = "STATE - Stateful Context Tracking Engine (Nix fallback)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -14,14 +26,11 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
-        # Development shell
+        # Development shell (fallback when Guix unavailable)
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Core
             guile_3_0
-
-            # Optional: minikanren (if available in nixpkgs)
-            # guile-minikanren
 
             # Documentation
             asciidoctor
@@ -32,21 +41,20 @@
             # Build tools
             just
             git
-
-            # Container tools
-            podman
           ];
 
           shellHook = ''
-            echo "STATE development environment"
+            echo "STATE development environment (Nix fallback)"
+            echo ""
+            echo "NOTE: Guix is the primary package manager for this project."
+            echo "      Consider using: guix shell -m manifest.scm"
+            echo ""
             echo "Guile: $(guile --version | head -1)"
             echo ""
             echo "Available commands:"
             echo "  just          - Show available tasks"
             echo "  just test     - Run tests"
             echo "  just repl     - Start Guile REPL with STATE"
-            echo "  just dot      - Generate GraphViz output"
-            echo "  just mermaid  - Generate Mermaid output"
             echo ""
             export GUILE_LOAD_PATH="$PWD/lib:$GUILE_LOAD_PATH"
           '';
@@ -78,11 +86,6 @@
             license = licenses.mit;  # Plus Palimpsest
             platforms = platforms.all;
           };
-        };
-
-        # Overlay for adding to other flakes
-        overlays.default = final: prev: {
-          state = self.packages.${system}.default;
         };
       }
     );
