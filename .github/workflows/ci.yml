@@ -1,0 +1,182 @@
+# SPDX-License-Identifier: MIT OR AGPL-3.0-or-later
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  # ============================================================
+  # LINT & SYNTAX
+  # ============================================================
+  lint:
+    name: Lint Scheme Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Guile
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y guile-3.0
+
+      - name: Check Scheme syntax
+        run: |
+          echo "Checking Scheme file syntax..."
+          for f in lib/*.scm STATE.scm examples/*.scm; do
+            if [ -f "$f" ]; then
+              echo "  Checking $f..."
+              guile -c "(load \"$f\")" || exit 1
+            fi
+          done
+          echo "✓ All files OK"
+
+  # ============================================================
+  # TESTS
+  # ============================================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Guile
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y guile-3.0
+
+      - name: Run module tests
+        run: |
+          guile -L lib -c '(use-modules (state)) (display "Modules loaded: ") (display (state-modules-loaded)) (newline)'
+
+      - name: Run verbose tests
+        run: |
+          guile -L lib -c '(use-modules (state-core) (state-kanren) (state-graph) (state-history)) (display "All modules loaded successfully\n")'
+
+      - name: Run E2E tests
+        run: |
+          guile -L lib -c '
+            (use-modules (state) (state-core) (state-graph) (state-history))
+            (load "examples/example-state.scm")
+            (display "Focus: ") (display (get-current-focus state)) (newline)
+            (display "Blocked: ") (display (length (get-blocked-projects state))) (newline)
+            (display "Critical: ") (display (length (get-critical-next state))) (newline)
+            (display "✓ E2E tests passed\n")'
+
+  # ============================================================
+  # SECURITY
+  # ============================================================
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets
+        run: |
+          echo "Checking for potential secrets..."
+          if grep -rE "(password|secret|api_key)\s*=\s*['\"][^'\"]{20,}" . --include="*.scm" 2>/dev/null | grep -v "example\|test"; then
+            echo "✗ FAIL: Potential secrets detected"
+            exit 1
+          fi
+          echo "✓ No obvious secrets found"
+
+      - name: Check for HTTP URLs
+        run: |
+          echo "Checking for HTTP URLs..."
+          if grep -rE "http://[^l]" . --include="*.scm" --include="*.adoc" 2>/dev/null | grep -v "localhost\|127.0.0.1\|example"; then
+            echo "✗ FAIL: HTTP URLs detected"
+            exit 1
+          fi
+          echo "✓ No HTTP URLs found"
+
+      - name: Check SPDX headers
+        run: |
+          echo "Checking SPDX headers..."
+          for f in lib/*.scm; do
+            if ! head -5 "$f" | grep -q "SPDX-License-Identifier"; then
+              echo "✗ FAIL: Missing SPDX in $f"
+              exit 1
+            fi
+          done
+          echo "✓ All source files have SPDX headers"
+
+  # ============================================================
+  # DOCUMENTATION
+  # ============================================================
+  docs:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          MISSING=""
+          [ ! -f "README.adoc" ] && MISSING="$MISSING README.adoc"
+          [ ! -f "LICENSE.txt" ] && MISSING="$MISSING LICENSE.txt"
+          [ ! -f "SECURITY.md" ] && MISSING="$MISSING SECURITY.md"
+          [ ! -f "CONTRIBUTING.adoc" ] && MISSING="$MISSING CONTRIBUTING.adoc"
+
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing required files:$MISSING"
+            exit 1
+          fi
+          echo "✓ All required documentation present"
+
+      - name: Check for stale TODOs
+        run: |
+          echo "Checking for TODOs..."
+          TODO_COUNT=$(grep -rn "TODO\|FIXME\|XXX" --include="*.scm" . 2>/dev/null | wc -l || echo "0")
+          echo "Found $TODO_COUNT TODO/FIXME items"
+          if [ "$TODO_COUNT" -gt 20 ]; then
+            echo "::warning::High number of TODOs ($TODO_COUNT)"
+          fi
+
+  # ============================================================
+  # CONTAINER BUILD
+  # ============================================================
+  container:
+    name: Container Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container
+        run: |
+          docker build -t state:test .
+
+      - name: Test container
+        run: |
+          docker run --rm state:test guile -L lib -c '(use-modules (state)) (display (state-modules-loaded)) (newline)'
+
+  # ============================================================
+  # MUST REQUIREMENTS
+  # ============================================================
+  must:
+    name: Must Requirements
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Guile
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y guile-3.0
+
+      - name: Install Just
+        uses: extractions/setup-just@v2
+
+      - name: Run must checks
+        run: |
+          # Run must checks if Mustfile exists
+          if [ -f "Mustfile" ]; then
+            just -f Mustfile all
+          else
+            echo "No Mustfile found, skipping"
+          fi

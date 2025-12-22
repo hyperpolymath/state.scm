@@ -1,0 +1,146 @@
+# SPDX-License-Identifier: MIT OR AGPL-3.0-or-later
+# Mustfile — Required Recipes for STATE.scm
+#
+# Mustfiles define REQUIRED operations that MUST pass for the project
+# to be considered in a valid state. These are non-negotiable checks.
+#
+# Usage: must <recipe>
+# Typically aliased: alias must='just -f Mustfile'
+
+# ============================================================
+# CRITICAL REQUIREMENTS
+# ============================================================
+
+# All modules must load without error
+must-load:
+    @echo "MUST: All modules load correctly"
+    guile -L lib -c '(use-modules (state)) (state-modules-loaded)'
+    @echo "✓ PASS"
+
+# Core queries must work
+must-query:
+    @echo "MUST: Core queries function"
+    guile -L lib -c ' \
+        (use-modules (state) (state-core)) \
+        (load "examples/example-state.scm") \
+        (assert (get-current-focus state)) \
+        (assert (list? (get-all-projects state))) \
+        (assert (list? (get-blocked-projects state)))'
+    @echo "✓ PASS"
+
+# Visualization must generate output
+must-visualize:
+    @echo "MUST: Visualization generates output"
+    guile -L lib -c ' \
+        (use-modules (state) (state-graph)) \
+        (load "examples/example-state.scm") \
+        (assert (string? (generate-dot state))) \
+        (assert (string? (generate-mermaid state)))'
+    @echo "✓ PASS"
+
+# History must work
+must-history:
+    @echo "MUST: History tracking functions"
+    guile -L lib -c ' \
+        (use-modules (state) (state-history)) \
+        (load "examples/example-state.scm") \
+        (assert (list? (create-snapshot state)))'
+    @echo "✓ PASS"
+
+# No syntax errors in any Scheme file
+must-syntax:
+    @echo "MUST: All Scheme files have valid syntax"
+    @for f in lib/*.scm STATE.scm examples/*.scm; do \
+        guile -c "(load \"$$f\")" 2>&1 || exit 1; \
+    done
+    @echo "✓ PASS"
+
+# ============================================================
+# SECURITY REQUIREMENTS
+# ============================================================
+
+# No hardcoded secrets
+must-no-secrets:
+    @echo "MUST: No hardcoded secrets"
+    @if grep -rE "(password|secret|api_key)\s*=\s*['\"][^'\"]{20,}" . --include="*.scm" 2>/dev/null | grep -v "example\|test"; then \
+        echo "✗ FAIL: Potential secrets detected"; \
+        exit 1; \
+    fi
+    @echo "✓ PASS"
+
+# No HTTP URLs (security requirement)
+must-https:
+    @echo "MUST: All URLs use HTTPS"
+    @if grep -rE "http://[^l]" . --include="*.scm" --include="*.adoc" 2>/dev/null | grep -v "localhost\|127.0.0.1\|example"; then \
+        echo "✗ FAIL: HTTP URLs detected"; \
+        exit 1; \
+    fi
+    @echo "✓ PASS"
+
+# ============================================================
+# DOCUMENTATION REQUIREMENTS
+# ============================================================
+
+# Required documentation files exist
+must-docs:
+    @echo "MUST: Required documentation exists"
+    @test -f README.adoc || { echo "✗ FAIL: Missing README.adoc"; exit 1; }
+    @test -f LICENSE.txt || { echo "✗ FAIL: Missing LICENSE.txt"; exit 1; }
+    @test -f SECURITY.md || { echo "✗ FAIL: Missing SECURITY.md"; exit 1; }
+    @test -f CONTRIBUTING.adoc || { echo "✗ FAIL: Missing CONTRIBUTING.adoc"; exit 1; }
+    @echo "✓ PASS"
+
+# SPDX headers in source files
+must-spdx:
+    @echo "MUST: Source files have SPDX headers"
+    @for f in lib/*.scm; do \
+        if ! head -5 "$$f" | grep -q "SPDX-License-Identifier"; then \
+            echo "✗ FAIL: Missing SPDX in $$f"; \
+            exit 1; \
+        fi; \
+    done
+    @echo "✓ PASS"
+
+# ============================================================
+# BUILD REQUIREMENTS
+# ============================================================
+
+# Containerfile must be valid
+must-container:
+    @echo "MUST: Containerfile exists and is valid"
+    @test -f Containerfile || { echo "✗ FAIL: Missing Containerfile"; exit 1; }
+    @head -1 Containerfile | grep -q "^#\|^FROM" || { echo "✗ FAIL: Invalid Containerfile"; exit 1; }
+    @echo "✓ PASS"
+
+# Guix package definition must be valid
+must-guix:
+    @echo "MUST: Guix package definition is valid"
+    @test -f guix.scm || { echo "✗ FAIL: Missing guix.scm"; exit 1; }
+    @guile -c "(load \"guix.scm\")" 2>&1 || { echo "✗ FAIL: Invalid guix.scm"; exit 1; }
+    @echo "✓ PASS"
+
+# ============================================================
+# COMPOSITE CHECKS
+# ============================================================
+
+# Run all MUST checks
+all: must-syntax must-load must-query must-visualize must-history must-no-secrets must-https must-docs must-spdx must-container must-guix
+    @echo ""
+    @echo "════════════════════════════════════════"
+    @echo "✓ ALL MUST REQUIREMENTS SATISFIED"
+    @echo "════════════════════════════════════════"
+
+# Quick check for pre-commit
+quick: must-syntax must-load must-no-secrets
+    @echo "✓ Quick MUST checks passed"
+
+# Security-focused check
+security: must-no-secrets must-https
+    @echo "✓ Security MUST checks passed"
+
+# Documentation-focused check
+docs: must-docs must-spdx
+    @echo "✓ Documentation MUST checks passed"
+
+# Default: run all
+default: all

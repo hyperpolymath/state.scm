@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT AND LicenseRef-Palimpsest-0.8
+# SPDX-License-Identifier: MIT OR AGPL-3.0-or-later
 # Container image for STATE development and usage
 #
 # Build: podman build -t state:latest .
@@ -10,8 +10,8 @@ FROM docker.io/library/debian:bookworm-slim
 LABEL org.opencontainers.image.title="STATE"
 LABEL org.opencontainers.image.description="Stateful Context Tracking Engine for AI Conversation Continuity"
 LABEL org.opencontainers.image.version="2.0.0"
-LABEL org.opencontainers.image.licenses="MIT AND LicenseRef-Palimpsest-0.8"
-LABEL org.opencontainers.image.source="https://github.com/Hyperpolymath/STATE.scm"
+LABEL org.opencontainers.image.licenses="MIT OR AGPL-3.0-or-later"
+LABEL org.opencontainers.image.source="https://github.com/hyperpolymath/STATE.scm"
 
 # Install Guile and dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
