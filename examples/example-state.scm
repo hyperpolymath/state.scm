@@ -218,6 +218,53 @@
       ("src/parser/grammar.rs"
        "docs/architecture.djot"))
 
+    ;; Advanced: Questions requiring human input
+    (questions-for-maintainer
+      ((architecture
+         ("Should the LLVM backend target LLVM 18 or wait for 19?"
+          "Is the Rust FFI layer the right approach for language bindings?"))
+       (priorities
+         ("Is Oblibeny parser more urgent than NeuroPhone hardware testing?"
+          "Should ZeroStep wait for full Oblibeny completion?"))
+       (integration
+         ("Which IDE should get first-class support?"))
+       (deployment
+         ("Self-hosted GitLab or continue with GitHub?"))
+       (testing
+         ("Is property-based testing sufficient for the parser?"))
+       (community
+         ("Accept community PRs for grammar extensions?"))))
+
+    ;; Advanced: Long-term vision beyond current milestones
+    (long-term-roadmap
+      ((post-v1
+         ((v1.1 ((name . "IDE Integration")
+                 (items . ("LSP server" "VSCode extension" "Neovim plugin"))))
+          (v1.2 ((name . "Advanced Type System")
+                 (items . ("Dependent types" "Effect system" "Linear types"))))))
+       (vision-items
+         ("Self-hosting compiler"
+          "Formal verification of core semantics"
+          "WebAssembly compilation target"
+          "GPU compute via SPIR-V"))
+       (research-tracks
+         ((formal-verification
+            ((goal . "Prove type soundness using Coq")
+             (status . "investigating")))
+          (performance
+            ((goal . "Compile times under 100ms for 10k LOC")
+             (status . "benchmarking")))))))
+
+    ;; Advanced: Quick reference for AI context
+    (state-summary
+      ((project . "Oblibeny Ecosystem")
+       (version . "0.4.0")
+       (overall-completion . 35)
+       (next-milestone . "v0.5-parser")
+       (critical-blockers . 1)
+       (high-priority-issues . 3)
+       (updated . "2025-12-06")))
+
     (context-notes . "Critical: Oblibeny parser is on critical path. NeuroPhone ready for hardware. Download STATE.scm at end of session!")))
 
 ;;; ==================================================

@@ -126,6 +126,48 @@ Completion snapshots over time for velocity tracking and estimation.
 === Critical Next Actions
 Prioritized list of immediate actions with optional deadlines.
 
+[[questions-for-maintainer]]
+=== Questions for Maintainer (Advanced)
+Categorized questions requiring human input. Prevents AI from making assumptions.
+
+Categories: `architecture`, `priorities`, `integration`, `deployment`, `testing`, `community`
+
+[[long-term-roadmap]]
+=== Long-Term Roadmap (Advanced)
+Extended roadmap with:
+
+* `post-v1` - Planned releases after initial major version
+* `vision-items` - Aspirational features without timeline
+* `research-tracks` - Exploratory work with goals and status
+
+[[state-summary]]
+=== State Summary (Advanced)
+Quick-reference snapshot for AI to assess project health at a glance.
+
+[source,scheme]
+----
+(state-summary
+  ((project . "My Project")
+   (version . "0.2.0")
+   (overall-completion . 55)
+   (next-milestone . "v0.3")
+   (critical-blockers . 0)
+   (high-priority-issues . 3)
+   (updated . "2025-12-08")))
+----
+
+== Helper Functions
+
+Standard Guile functions for querying state:
+
+[source,scheme]
+----
+(get-completion-percentage state)  ; Overall completion %
+(get-blockers state)               ; All blockers across projects
+(get-milestone state "v0.3")       ; Specific milestone info
+(project-blocked? state "Name")    ; Check if project is blocked
+----
+
 == Query System
 
 STATE supports minikanren-style relational queries:

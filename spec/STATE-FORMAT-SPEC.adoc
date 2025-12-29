@@ -679,6 +679,193 @@ Free-form textual summary of current context.
 (context-notes . "Phase 2 complete. Focus shifting to automation.")
 ----
 
+=== questions-for-maintainer (OPTIONAL)
+
+Categorized questions requiring human input, preventing AI from making assumptions.
+
+[source,scheme]
+----
+(questions-for-maintainer
+  ((architecture
+     ("Should analytics integration use Erlang Port or WASM compilation?"
+      "Is the multi-database adapter pattern intentional?"))
+   (priorities
+     ("Is v0.2 higher priority than v0.3?"))
+   (integration
+     ("Which SSO provider should be primary?"))
+   (deployment
+     ("Kubernetes or bare metal for production?"))
+   (testing
+     ("Is 80% coverage sufficient for release?"))
+   (community
+     ("Accept external contributors for core modules?"))))
+----
+
+==== Question Categories
+
+[cols="1,3"]
+|===
+|Category |Description
+
+|`architecture`
+|Fundamental design decisions
+
+|`priorities`
+|Ordering and sequencing of work
+
+|`integration`
+|External service/system choices
+
+|`deployment`
+|Infrastructure and operations
+
+|`testing`
+|Quality assurance approach
+
+|`community`
+|Governance and collaboration
+|===
+
+This section captures open questions that need human input, ensuring AI assistants
+do not make assumptions about decisions that require maintainer judgment.
+
+=== long-term-roadmap (OPTIONAL)
+
+Extended roadmap for future planning beyond MVP, including vision and research.
+
+[source,scheme]
+----
+(long-term-roadmap
+  ((post-v1
+     ((v1.1 ((name . "Enhanced Analytics")
+             (items . ("Dashboard" "Metrics export"))))
+      (v1.2 ((name . "Advanced Security")
+             (items . ("Audit logging" "RBAC"))))))
+   (vision-items
+     ("Universal project manager integration"
+      "AI-assisted code review"
+      "Formal verification integration"))
+   (research-tracks
+     ((formal-verification
+        ((goal . "Prove correctness of core algorithms")
+         (status . "investigating")))
+      (performance
+        ((goal . "Sub-millisecond query latency")
+         (status . "benchmarking")))))))
+----
+
+==== Long-Term Roadmap Subfields
+
+[cols="2,1,4"]
+|===
+|Field |Type |Description
+
+|`post-v1`
+|Object[]
+|Planned releases after initial major version
+
+|`vision-items`
+|String[]
+|Aspirational features without timeline
+
+|`research-tracks`
+|Object[]
+|Exploratory work with goals and status
+|===
+
+=== state-summary (OPTIONAL)
+
+Quick-reference snapshot for AI to assess project health at a glance.
+
+[source,scheme]
+----
+(state-summary
+  ((project . "My Project")
+   (version . "0.2.0")
+   (overall-completion . 55)
+   (next-milestone . "v0.3")
+   (critical-blockers . 0)
+   (high-priority-issues . 3)
+   (updated . "2025-12-08")))
+----
+
+==== State Summary Fields
+
+[cols="2,1,1,4"]
+|===
+|Field |Type |Required |Description
+
+|`project`
+|String
+|REQUIRED
+|Primary project name
+
+|`version`
+|SemVer
+|REQUIRED
+|Current version
+
+|`overall-completion`
+|Integer
+|REQUIRED
+|Aggregate completion percentage (0-100)
+
+|`next-milestone`
+|String
+|RECOMMENDED
+|Upcoming milestone identifier
+
+|`critical-blockers`
+|Integer
+|RECOMMENDED
+|Count of critical blocking issues
+
+|`high-priority-issues`
+|Integer
+|OPTIONAL
+|Count of high-priority issues
+
+|`updated`
+|Date
+|REQUIRED
+|Last summary update date
+|===
+
+== Helper Functions
+
+Implementations SHOULD provide standard helper functions for querying state:
+
+[source,scheme]
+----
+;; Get overall completion percentage
+(define (get-completion-percentage state)
+  (assoc-ref (assoc-ref state 'state-summary) 'overall-completion))
+
+;; Get all blockers across projects
+(define (get-blockers state)
+  (let ((projects (assoc-ref state 'projects)))
+    (apply append
+      (map (lambda (p) (assoc-ref p 'blockers))
+           projects))))
+
+;; Get specific milestone information
+(define (get-milestone state milestone-name)
+  (let ((roadmap (assoc-ref state 'long-term-roadmap)))
+    (assoc milestone-name (assoc-ref roadmap 'post-v1))))
+
+;; Check if project is blocked
+(define (project-blocked? state project-name)
+  (let* ((projects (assoc-ref state 'projects))
+         (project (find (lambda (p)
+                          (equal? (assoc-ref p 'name) project-name))
+                        projects)))
+    (and project
+         (equal? (assoc-ref project 'status) "blocked"))))
+----
+
+These functions enable programmatic access to state data and support
+relational queries via minikanren integration.
+
 == Data Types
 
 === Primitive Types
